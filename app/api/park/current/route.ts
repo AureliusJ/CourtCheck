@@ -193,12 +193,7 @@ export async function GET() {
       hasLights: park.has_lights,
     },
     boards: boardSummaries,
-    // TEST: hardcoded weather hint for Vercel verification — remove after sign-off
-    weatherHint: {
-      lastRainMinutesAgo: 45,
-      currentlyRaining: false,
-      summary: 'Last rain ~45 min ago — possibly still wet',
-    },
+    weatherHint,
   };
 
   return Response.json(response, {
