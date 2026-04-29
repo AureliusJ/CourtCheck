@@ -88,7 +88,7 @@ export function BusyTimesChart({
           <YAxis
             type="category"
             dataKey="label"
-            width={40}
+            width={52}
             axisLine={false}
             tickLine={false}
             tick={{ fontSize: 12, fill: '#7A766F', fontFamily: 'Inter, sans-serif' }}
