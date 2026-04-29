@@ -47,14 +47,14 @@ function getUpdatedLine(board: BoardSummary): string {
 }
 
 export function BoardCard({ board, isAfterSunset }: BoardCardProps) {
-  const bg = isAfterSunset ? 'bg-brand-dusk' : (BOARD_BG[board.id] ?? 'bg-brand-gray');
-  const bgDark = isAfterSunset ? 'bg-brand-dusk' : (BOARD_BG_DARK[board.id] ?? 'bg-brand-gray');
+  const bg = isAfterSunset ? 'bg-black/30' : (BOARD_BG[board.id] ?? 'bg-brand-gray');
+  const bgDark = isAfterSunset ? 'bg-black/40' : (BOARD_BG_DARK[board.id] ?? 'bg-brand-gray');
   const pill = getPillLabel(board, isAfterSunset);
   const hasData = board.current.queueCount !== null;
   const isStale = board.current.isStale;
 
   return (
-    <div className={`${bg} rounded-card shadow-soft overflow-hidden`}>
+    <div className={`${bg} rounded-card overflow-hidden ${isAfterSunset ? 'border border-white/10' : 'shadow-soft'}`}>
       {/* Top row: status pill + courts label */}
       <div className="flex items-center justify-between px-5 pt-4">
         <span className="bg-white/20 text-brand-cream text-[10px] font-sans font-bold tracking-[0.15em] uppercase px-2.5 py-1 rounded-full">

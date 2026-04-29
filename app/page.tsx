@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Sun } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 import { useCurrentPark } from '@/hooks/useCurrentPark';
 import { CourtMap } from '@/components/CourtMap';
 import { SunStatusStrip } from '@/components/SunStatusStrip';
@@ -90,21 +90,20 @@ export default function HomePage() {
       {/* Header */}
       <div className="flex items-start justify-between mb-1">
         <div>
-          <p className="font-sans text-[10px] font-bold tracking-[0.15em] text-brand-muted uppercase">
+          <p className={`font-sans text-[10px] font-bold tracking-[0.15em] uppercase ${isAfterSunset ? 'text-white/50' : 'text-brand-muted'}`}>
             Ramsden Park
           </p>
-          <h1 className="font-serif text-5xl font-semibold text-brand-text leading-tight mt-0.5">
+          <h1 className={`font-serif text-5xl font-semibold leading-tight mt-0.5 ${isAfterSunset ? 'text-white' : 'text-brand-text'}`}>
             Tennis
             <br />
             Courts
           </h1>
         </div>
-        <Sun
-          size={22}
-          className={`mt-1 shrink-0 ${
-            isAfterSunset ? 'text-brand-dusk' : 'text-brand-amber'
-          }`}
-        />
+        {isAfterSunset ? (
+          <Moon size={22} className="mt-1 shrink-0 text-brand-cream/50" />
+        ) : (
+          <Sun size={22} className="mt-1 shrink-0 text-brand-amber" />
+        )}
       </div>
 
       {/* Sun status strip */}
@@ -167,7 +166,7 @@ export default function HomePage() {
       )}
 
       {/* Sticky CTA (positioned outside scroll flow) */}
-      <StickyUpdateCTA />
+      <StickyUpdateCTA isAfterSunset={isAfterSunset} />
     </main>
   );
 }

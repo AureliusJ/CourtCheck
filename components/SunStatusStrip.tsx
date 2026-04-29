@@ -1,11 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Sunrise } from 'lucide-react';
+import { CircleAlert, Sunrise } from 'lucide-react';
 import { getSunWindow } from '@/lib/sun';
 import type { SunWindow } from '@/lib/sun';
 
-// Ramsden Park coordinates
 const LAT = 43.6772;
 const LON = -79.3919;
 
@@ -32,7 +31,6 @@ export function SunStatusStrip({ onHueStateChange }: SunStatusStripProps) {
       onHueStateChange?.(sw.hueState);
     }
     update();
-    // Recalculate every minute so the "X minutes until sunset" stays accurate
     const id = setInterval(update, 60_000);
     return () => clearInterval(id);
   }, [onHueStateChange]);
@@ -43,8 +41,8 @@ export function SunStatusStrip({ onHueStateChange }: SunStatusStripProps) {
 
   if (isAfterSunset) {
     return (
-      <div className="flex items-center gap-2 text-sm font-sans text-brand-dusk">
-        <Sunrise size={14} className="shrink-0" />
+      <div className="inline-flex items-center gap-2 bg-brand-text/50 rounded-full px-4 py-2 text-sm font-sans text-brand-cream">
+        <CircleAlert size={15} className="shrink-0 text-brand-amber" />
         <span>Courts likely closed — sunset was at {formatTime(sunset)}</span>
       </div>
     );
@@ -62,9 +60,7 @@ export function SunStatusStrip({ onHueStateChange }: SunStatusStripProps) {
   return (
     <div className="flex items-center gap-2 text-sm font-sans text-brand-muted">
       <Sunrise size={14} className="shrink-0" />
-      <span>
-        Sunrise {formatTime(sunrise)} · Sunset {formatTime(sunset)}
-      </span>
+      <span>Sunrise {formatTime(sunrise)} · Sunset {formatTime(sunset)}</span>
     </div>
   );
 }

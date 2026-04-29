@@ -41,7 +41,8 @@ body[data-sun-state="pre-sunset"] {
 }
 
 body[data-sun-state="post-sunset"] {
-  background: linear-gradient(to bottom, #2a1b4f, #1a1530);
+  background: linear-gradient(to bottom, #8B3A2A, #1a1530);
+  min-height: 100vh;
 }
 
 body {
