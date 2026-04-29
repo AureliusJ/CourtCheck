@@ -1,67 +1,170 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useEffect } from 'react';
+import { Sun } from 'lucide-react';
+import { useCurrentPark } from '@/hooks/useCurrentPark';
+import { CourtMap } from '@/components/CourtMap';
+import { SunStatusStrip } from '@/components/SunStatusStrip';
+import { BoardCard } from '@/components/BoardCard';
+import { StickyUpdateCTA } from '@/components/StickyUpdateCTA';
+import type { SunWindow } from '@/lib/sun';
+import { useState } from 'react';
+
+function BoardLegendRow({
+  label,
+  range,
+  board,
+  isAfterSunset,
+}: {
+  label: string;
+  range: string;
+  board: { queueCount: number | null; waitMinutes: number | null; isStale: boolean; minutesAgo: number | null } | undefined;
+  isAfterSunset: boolean;
+}) {
+  let detail = 'No data yet';
+  if (isAfterSunset) {
+    detail = 'Closed';
+  } else if (board) {
+    if (board.isStale && board.minutesAgo !== null) {
+      const hours = Math.floor(board.minutesAgo / 60);
+      detail = `Last update ${hours}h ago`;
+    } else if (board.queueCount === null) {
+      detail = 'No data yet';
+    } else if (board.queueCount === 0) {
+      detail = '0 rackets · No wait';
+    } else if (board.waitMinutes !== null) {
+      const prefix = board.waitMinutes > 40 ? '>' : '~';
+      detail = `${board.queueCount} rackets · ${prefix}${board.waitMinutes} min`;
+    }
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="flex items-baseline justify-between gap-2">
+      <span className="font-sans text-[13px] text-brand-text">
+        <span className="font-bold">{label}</span>{' '}
+        <span className="text-brand-muted">({range})</span>
+      </span>
+      <span className="font-sans text-[13px] text-brand-muted text-right">{detail}</span>
+    </div>
+  );
+}
+
+export default function HomePage() {
+  const { data, isLoading, isError } = useCurrentPark();
+  const [hueState, setHueState] = useState<SunWindow['hueState']>('day');
+
+  // Apply sun-state to body for CSS gradient transitions
+  useEffect(() => {
+    document.body.setAttribute('data-sun-state', hueState);
+    return () => document.body.removeAttribute('data-sun-state');
+  }, [hueState]);
+
+  const isAfterSunset = hueState === 'post-sunset';
+  const boards = data?.boards ?? [];
+  const allNoData = boards.length > 0 && boards.every((b) => b.current.queueCount === null);
+
+  // Skeleton / error states
+  if (isLoading && !data) {
+    return (
+      <div className="min-h-screen bg-brand-bg flex items-center justify-center">
+        <p className="font-sans text-brand-muted text-sm">Loading courts…</p>
+      </div>
+    );
+  }
+
+  if (isError && !data) {
+    return (
+      <div className="min-h-screen bg-brand-bg flex items-center justify-center px-6">
+        <p className="font-sans text-brand-muted text-sm text-center">
+          Could not load court data. Check your connection.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <main className="max-w-sm mx-auto px-4 pt-6 pb-40 min-h-screen">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-1">
+        <div>
+          <p className="font-sans text-[10px] font-bold tracking-[0.15em] text-brand-muted uppercase">
+            Ramsden Park
+          </p>
+          <h1 className="font-serif text-5xl font-semibold text-brand-text leading-tight mt-0.5">
+            Tennis
+            <br />
+            Courts
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+        </div>
+        <Sun
+          size={22}
+          className={`mt-1 shrink-0 ${
+            isAfterSunset ? 'text-brand-dusk' : 'text-brand-amber'
+          }`}
+        />
+      </div>
+
+      {/* Sun status strip */}
+      <div className="mt-4 mb-6">
+        <SunStatusStrip onHueStateChange={setHueState} />
+      </div>
+
+      {/* Court map */}
+      {boards.length > 0 && (
+        <CourtMap boards={boards} isAfterSunset={isAfterSunset} />
+      )}
+
+      {/* Condensed legend */}
+      {boards.length > 0 && (
+        <div className="mt-4 space-y-1.5">
+          {boards.map((board) => {
+            const parts = board.courtRangeLabel.match(/\d+/g) ?? [];
+            const range = parts.join('-');
+            return (
+              <BoardLegendRow
+                key={board.id}
+                label={board.label}
+                range={range}
+                board={board.current}
+                isAfterSunset={isAfterSunset}
+              />
+            );
+          })}
+        </div>
+      )}
+
+      {/* Empty state — shown when ALL boards have no data */}
+      {allNoData && !isAfterSunset && (
+        <div className="mt-6 rounded-card border border-brand-gray/30 bg-brand-cream/50 px-5 py-6">
+          <h2 className="font-serif text-3xl font-semibold text-brand-text leading-tight">
+            Be the first to
+            <br />
+            update
+          </h2>
+          <p className="mt-3 font-sans text-[14px] text-brand-muted leading-relaxed">
+            No reports yet today. Tap a court to share what you see.
+          </p>
+          <p className="mt-4 font-sans text-[13px] text-brand-muted/60 italic text-center">
+            Waiting for your report...
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            <div className="bg-brand-terracotta text-brand-cream font-serif">bla bla</div>
-          </a>
+      )}
 
-          <div className="bg-brand-terracotta text-brand-cream font-serif">bla bla</div>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      {/* Board summary cards */}
+      {boards.length > 0 && (
+        <div className="mt-6 space-y-3">
+          {boards.map((board) => (
+            <BoardCard
+              key={board.id}
+              board={board}
+              isAfterSunset={isAfterSunset}
+            />
+          ))}
         </div>
-      </main>
-    </div>
+      )}
+
+      {/* Sticky CTA (positioned outside scroll flow) */}
+      <StickyUpdateCTA />
+    </main>
   );
 }
