@@ -38,13 +38,16 @@ function BoardLegendRow({
     }
   }
 
+  const textColor = isAfterSunset ? 'text-white/80' : 'text-brand-text';
+  const mutedColor = isAfterSunset ? 'text-white/40' : 'text-brand-muted';
+
   return (
     <div className="flex items-baseline justify-between gap-2">
-      <span className="font-sans text-[13px] text-brand-text">
+      <span className={`font-sans text-[13px] ${textColor}`}>
         <span className="font-bold">{label}</span>{' '}
-        <span className="text-brand-muted">({range})</span>
+        <span className={mutedColor}>({range})</span>
       </span>
-      <span className="font-sans text-[13px] text-brand-muted text-right">{detail}</span>
+      <span className={`font-sans text-[13px] ${mutedColor} text-right`}>{detail}</span>
     </div>
   );
 }
