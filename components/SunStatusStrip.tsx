@@ -43,7 +43,7 @@ export function SunStatusStrip({ onHueStateChange }: SunStatusStripProps) {
     return (
       <div className="inline-flex items-center gap-2 bg-brand-text/50 rounded-full px-4 py-2 text-sm font-sans text-brand-cream">
         <CircleAlert size={15} className="shrink-0 text-brand-amber" />
-        <span>Courts likely closed — sunset was at {formatTime(sunset)}</span>
+        <span>Courts likely closed &mdash; sunset was at {formatTime(sunset)}</span>
       </div>
     );
   }
@@ -52,7 +52,7 @@ export function SunStatusStrip({ onHueStateChange }: SunStatusStripProps) {
     return (
       <div className="flex items-center gap-2 text-sm font-sans text-brand-amber">
         <Sunrise size={14} className="shrink-0" />
-        <span>Sunset in {minutesUntilSunset} minutes · Courts are unlit after dark</span>
+        <span>Sunset in {minutesUntilSunset} minutes &middot; Courts are unlit after dark</span>
       </div>
     );
   }
@@ -60,7 +60,7 @@ export function SunStatusStrip({ onHueStateChange }: SunStatusStripProps) {
   return (
     <div className="flex items-center gap-2 text-sm font-sans text-brand-muted">
       <Sunrise size={14} className="shrink-0" />
-      <span>Sunrise {formatTime(sunrise)} · Sunset {formatTime(sunset)}</span>
+      <span>Sunrise {formatTime(sunrise)} &middot; Sunset {formatTime(sunset)}</span>
     </div>
   );
 }
