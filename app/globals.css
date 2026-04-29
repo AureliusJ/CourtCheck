@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@source "../app";
+@source "../components";
+@source "../hooks";
 
 /*
  * Design tokens — migrated from tailwind.config.ts for Tailwind v4 compatibility.

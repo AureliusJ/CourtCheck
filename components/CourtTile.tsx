@@ -14,7 +14,7 @@ function getTileClass(board: BoardSummary, isAfterSunset: boolean): string {
   if (board.current.queueCount === null) {
     return 'bg-brand-bg border border-brand-gray/40 text-brand-muted';
   }
-  if (board.current.isStale) return 'bg-brand-gray text-brand-cream';
+  if (board.current.isStale) return 'bg-[#A8A49C] text-brand-cream';
 
   const wait = board.current.waitMinutes ?? 0;
   if (wait === 0) return 'bg-brand-sage text-brand-cream';
