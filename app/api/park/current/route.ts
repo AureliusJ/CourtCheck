@@ -1,9 +1,11 @@
 import { createServerClient } from '@/lib/db/client';
+import { getWeatherSnapshot } from '@/lib/weather';
 import type {
   BoardCurrent,
   BoardSummary,
   CourtCondition,
   CurrentParkState,
+  WeatherHint,
 } from '@/lib/api/types';
 
 const STALE_THRESHOLD_MS = 2 * 60 * 60 * 1000; // 2 hours
@@ -161,6 +163,26 @@ export async function GET() {
     };
   });
 
+  // Fetch weather hint when any board lacks fresh data.
+  // Skip the call when all boards are live — avoids a pointless external request.
+  const needsWeather = boardSummaries.some(
+    (b) => b.current.isStale || b.current.queueCount === null,
+  );
+  let weatherHint: WeatherHint | null = null;
+  if (needsWeather) {
+    const snapshot = await getWeatherSnapshot(
+      Number(park.latitude),
+      Number(park.longitude),
+    );
+    if (snapshot) {
+      weatherHint = {
+        currentlyRaining: snapshot.currentlyRaining,
+        lastRainMinutesAgo: snapshot.lastRainMinutesAgo,
+        summary: snapshot.summary,
+      };
+    }
+  }
+
   const response: CurrentParkState = {
     park: {
       id: park.id,
@@ -171,7 +193,7 @@ export async function GET() {
       hasLights: park.has_lights,
     },
     boards: boardSummaries,
-    weatherHint: null, // Week 3
+    weatherHint,
   };
 
   return Response.json(response, {
