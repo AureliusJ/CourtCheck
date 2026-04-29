@@ -35,10 +35,19 @@ export interface BoardSummary {
   current: BoardCurrent;
 }
 
+// API-facing shape returned in CurrentParkState (no fetchedAt)
 export interface WeatherHint {
   lastRainMinutesAgo: number | null;
   currentlyRaining: boolean;
   summary: string;
+}
+
+// Server-internal shape used by lib/weather.ts (includes fetchedAt for cache)
+export interface WeatherSnapshot {
+  currentlyRaining: boolean;
+  lastRainMinutesAgo: number | null;
+  summary: string;
+  fetchedAt: string;
 }
 
 export interface CurrentParkState {
@@ -59,5 +68,7 @@ export interface BusyTimesResponse {
   boardId: string;
   day: string;
   hourly: Array<{ hour: number; avgQueue: number; sampleSize: number }>;
+  sunriseHour: number;
+  sunsetHour: number;
   computedAt: string;
 }
