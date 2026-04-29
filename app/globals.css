@@ -1,7 +1,37 @@
 @import "tailwindcss";
 
+/*
+ * Design tokens — migrated from tailwind.config.ts for Tailwind v4 compatibility.
+ * tailwind.config.ts remains as a v3-format reference; @theme is the v4 source of truth.
+ */
+@theme {
+  /* Brand colors */
+  --color-brand-bg:              #EAE5DB;
+  --color-brand-text:            #222220;
+  --color-brand-muted:           #7A766F;
+  --color-brand-cream:           #F8F6F1;
+  --color-brand-terracotta:      #BC5F48;
+  --color-brand-terracotta-dark: #A64F3A;
+  --color-brand-sage:            #7C8B70;
+  --color-brand-sage-dark:       #6A795F;
+  --color-brand-amber:           #D49A4C;
+  --color-brand-blue:            #6B8296;
+  --color-brand-dusk:            #4A5D70;
+  --color-brand-gray:            #A8A49C;
+
+  /* Border radii */
+  --radius-court: 12px;
+  --radius-card:  20px;
+  --radius-modal: 24px;
+
+  /* Box shadows */
+  --shadow-soft:  0 8px 30px rgba(34, 34, 32, 0.06);
+  --shadow-modal: 0 20px 60px rgba(34, 34, 32, 0.15);
+}
+
+/* Fonts: inline so utilities reference the Next.js CSS variables directly */
 @theme inline {
-  --font-sans: var(--font-sans);
+  --font-sans:  var(--font-sans);
   --font-serif: var(--font-serif);
 }
 
