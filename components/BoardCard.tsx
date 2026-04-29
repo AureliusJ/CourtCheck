@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import { Droplets } from 'lucide-react';
-import type { BoardSummary } from '@/lib/api/types';
+import type { BoardSummary, WeatherHint } from '@/lib/api/types';
 
 interface BoardCardProps {
   board: BoardSummary;
   isAfterSunset: boolean;
+  weatherHint?: WeatherHint | null;
 }
 
 // Board index → background color token
@@ -46,7 +47,7 @@ function getUpdatedLine(board: BoardSummary): string {
   return `Updated ${minutesAgo}m ago${confirmed}`;
 }
 
-export function BoardCard({ board, isAfterSunset }: BoardCardProps) {
+export function BoardCard({ board, isAfterSunset, weatherHint }: BoardCardProps) {
   const bg = isAfterSunset ? 'bg-black/30' : (BOARD_BG[board.id] ?? 'bg-brand-gray');
   const bgDark = isAfterSunset ? 'bg-black/40' : (BOARD_BG_DARK[board.id] ?? 'bg-brand-gray');
   const pill = getPillLabel(board, isAfterSunset);
@@ -96,13 +97,22 @@ export function BoardCard({ board, isAfterSunset }: BoardCardProps) {
           <p className="font-sans text-[13px] text-brand-cream/70 truncate">
             {getUpdatedLine(board)}
           </p>
-          {/* Condition badge */}
+          {/* Condition badge — only when user has actively reported dry/wet */}
           {hasData && board.current.courtCondition !== 'unknown' && (
             <span className="inline-flex items-center gap-1 bg-white/15 text-brand-cream text-[11px] font-sans font-medium px-2 py-0.5 rounded-full w-fit">
               <Droplets size={10} />
               {board.current.courtCondition === 'dry' ? 'Dry' : 'Wet'}
             </span>
           )}
+          {/* Weather hint — shown when no active condition report and board has no fresh data */}
+          {weatherHint &&
+            weatherHint.summary &&
+            !isAfterSunset &&
+            (board.current.courtCondition === 'unknown' || !hasData || isStale) && (
+              <p className="font-sans text-[11px] italic text-brand-cream/60">
+                {weatherHint.summary}
+              </p>
+            )}
         </div>
 
         <Link

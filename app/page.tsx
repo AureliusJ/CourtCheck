@@ -160,6 +160,7 @@ export default function HomePage() {
               key={board.id}
               board={board}
               isAfterSunset={isAfterSunset}
+              weatherHint={data?.weatherHint}
             />
           ))}
         </div>
