@@ -10,7 +10,7 @@ export function useCurrentPark() {
 
   return useQuery({
     queryKey: ['current-park'],
-    queryFn: api.getCurrent,
+    queryFn: () => api.getCurrent(),
     staleTime: 30_000,
     refetchInterval: isOnUpdatePage ? false : 60_000,
     refetchOnWindowFocus: true,
