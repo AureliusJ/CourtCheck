@@ -34,7 +34,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  getCurrent: () => request<CurrentParkState>('/api/park/current'),
+  getCurrent: (bust?: boolean) =>
+    request<CurrentParkState>(
+      `/api/park/current${bust ? `?t=${Date.now()}` : ''}`,
+    ),
 
   submitReport: (input: SubmitReportInput) =>
     request<{ reportId: string; photoStatus: string }>('/api/reports', {
