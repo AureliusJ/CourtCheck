@@ -119,13 +119,15 @@ export default function HomePage() {
       {/* Wait-time color legend */}
       {boards.length > 0 && (
         <div className="mt-3 flex flex-wrap justify-center gap-x-3 gap-y-1.5">
-          {([
-            { color: '#7C8B70', label: 'No wait' },
-            { color: '#A8B86B', label: 'Short' },
-            { color: '#D49A4C', label: 'Moderate' },
-            { color: '#BC5F48', label: 'Long wait' },
-            { color: '#E8E4DC', label: 'No data', border: true },
-          ] as const).map(({ color, label, border }) => (
+          {(
+            [
+              { color: '#7C8B70', label: 'No wait' },
+              { color: '#A8B86B', label: 'Short' },
+              { color: '#D49A4C', label: 'Moderate' },
+              { color: '#BC5F48', label: 'Long wait' },
+              { color: '#E8E4DC', label: 'No data', border: true },
+            ] as Array<{ color: string; label: string; border?: boolean }>
+          ).map(({ color, label, border }) => (
             <div key={label} className="flex items-center gap-1.5">
               <div
                 className="w-2 h-2 rounded-full shrink-0"
