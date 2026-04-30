@@ -9,7 +9,8 @@ import type {
 } from '@/lib/api/types';
 
 const STALE_THRESHOLD_MS = 2 * 60 * 60 * 1000; // 2 hours
-const RECENT_WINDOW_MS = 30 * 60 * 1000;        // 30 minutes
+const RECENT_WINDOW_MS = 30 * 60 * 1000;        // 30 min — stale detection threshold
+const FRESH_WINDOW_MS = 5 * 60 * 1000;          // 5 min — primary display window
 const CONFIRMATION_TOLERANCE = 1;                // ±1 of displayed count
 
 function computeWait(queueCount: number, courtsOnBoard: number) {
@@ -75,11 +76,15 @@ export async function GET() {
     .order('created_at', { ascending: false });
 
   const recentCutoff = new Date(Date.now() - RECENT_WINDOW_MS);
+  const freshCutoff = new Date(Date.now() - FRESH_WINDOW_MS);
 
   const boardSummaries: BoardSummary[] = boards.map((board) => {
     const boardReports = (reports ?? []).filter((r) => r.board_id === board.id);
     const recentReports = boardReports.filter(
       (r) => new Date(r.created_at) >= recentCutoff,
+    );
+    const freshReports = boardReports.filter(
+      (r) => new Date(r.created_at) >= freshCutoff,
     );
 
     if (boardReports.length === 0) {
@@ -113,24 +118,28 @@ export async function GET() {
     );
     const isStale = recentReports.length === 0;
 
-    // Displayed count: median of recent reports (or most recent if stale)
-    const countsToUse = isStale
-      ? [mostRecent.queue_count]
-      : recentReports.map((r) => r.queue_count);
-    const queueCount = Math.round(median(countsToUse));
+    // Displayed count: prefer fresh (5 min) reports; fall back to recent (30 min) or
+    // most-recent-only when stale. This prevents old reports from dragging the median
+    // after a user submits a significantly different count.
+    const displaySource = freshReports.length > 0
+      ? freshReports
+      : isStale
+        ? [mostRecent]
+        : recentReports;
+    const queueCount = Math.round(median(displaySource.map((r) => r.queue_count)));
 
-    // Condition: mode of recent reports, fallback to most recent
-    const conditionSource = isStale ? [mostRecent] : recentReports;
+    // Condition: mode of same source used for queue count
     const conditionCounts: Record<string, number> = {};
-    for (const r of conditionSource) {
+    for (const r of displaySource) {
       conditionCounts[r.court_condition] = (conditionCounts[r.court_condition] ?? 0) + 1;
     }
     const courtCondition = Object.entries(conditionCounts).sort(
       (a, b) => b[1] - a[1],
     )[0][0] as CourtCondition;
 
-    // Confirmation count: recent reports within ±1 of displayed count
-    const confirmationCount = recentReports.filter(
+    // Confirmation count: fresh (or recent if no fresh) reports within ±1 of displayed count
+    const confirmationSource = freshReports.length > 0 ? freshReports : recentReports;
+    const confirmationCount = confirmationSource.filter(
       (r) => Math.abs(r.queue_count - queueCount) <= CONFIRMATION_TOLERANCE,
     ).length;
 
