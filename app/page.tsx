@@ -116,6 +116,35 @@ export default function HomePage() {
         <CourtMap boards={boards} isAfterSunset={isAfterSunset} />
       )}
 
+      {/* Wait-time color legend */}
+      {boards.length > 0 && (
+        <div className="mt-3 flex flex-wrap justify-center gap-x-3 gap-y-1.5">
+          {([
+            { color: '#7C8B70', label: 'No wait' },
+            { color: '#A8B86B', label: 'Short' },
+            { color: '#D49A4C', label: 'Moderate' },
+            { color: '#BC5F48', label: 'Long wait' },
+            { color: '#E8E4DC', label: 'No data', border: true },
+          ] as const).map(({ color, label, border }) => (
+            <div key={label} className="flex items-center gap-1.5">
+              <div
+                className="w-2 h-2 rounded-full shrink-0"
+                style={{
+                  backgroundColor: color,
+                  ...(border ? { border: '1px solid #A8A49C' } : {}),
+                }}
+              />
+              <span
+                className="font-sans text-[10px] font-semibold uppercase tracking-wide"
+                style={{ color: '#7A766F' }}
+              >
+                {label}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Condensed legend */}
       {boards.length > 0 && (
         <div className="mt-4 space-y-1.5">
