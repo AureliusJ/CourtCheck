@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { getOrCreateDeviceHash } from '@/lib/device';
+import type { CurrentParkState } from '@/lib/api/types';
 
 interface SubmitReportInput {
   boardId: string;
@@ -59,7 +60,37 @@ export function useSubmitReport() {
 
       throw new Error('request_failed');
     },
-    onSuccess: () => {
+    onSuccess: (_result, input) => {
+      // Patch the cache immediately so the home screen reflects the new values
+      // without waiting for the CDN-cached GET to expire (s-maxage=30).
+      queryClient.setQueryData<CurrentParkState>(['current-park'], (prev) => {
+        if (!prev) return prev;
+        const now = new Date().toISOString();
+        return {
+          ...prev,
+          boards: prev.boards.map((board) => {
+            if (board.id !== input.boardId) return board;
+            const { queueCount, courtCondition } = input;
+            const base = queueCount === 0 ? 0 : (queueCount / board.courtsOnBoard) * 30;
+            return {
+              ...board,
+              current: {
+                ...board.current,
+                queueCount,
+                courtCondition,
+                lastUpdatedAt: now,
+                minutesAgo: 0,
+                isStale: false,
+                confirmationCount: 1,
+                waitMinutes: Math.round(base),
+                waitDisplayLow: Math.round(base * 0.83),
+                waitDisplayHigh: Math.round(base * 1.33),
+              },
+            };
+          }),
+        };
+      });
+      // Background refetch to eventually sync with server truth
       queryClient.invalidateQueries({ queryKey: ['current-park'] });
     },
     onError: (err) => {
