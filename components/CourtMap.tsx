@@ -6,6 +6,7 @@ import type { BoardSummary } from '@/lib/api/types';
 interface CourtMapProps {
   boards: BoardSummary[];
   isAfterSunset: boolean;
+  onBoardSelect?: (boardId: string) => void;
 }
 
 // Fixed court layout for Ramsden Park:
@@ -25,18 +26,54 @@ const EAST_LAYOUT = [
   { courtNumber: 8, boardIndex: 2 },
 ];
 
-export function CourtMap({ boards, isAfterSunset }: CourtMapProps) {
+function PickerTile({
+  courtNumber,
+  board,
+  isAfterSunset,
+  onBoardSelect,
+}: {
+  courtNumber: number;
+  board: BoardSummary;
+  isAfterSunset: boolean;
+  onBoardSelect: (boardId: string) => void;
+}) {
+  return (
+    <div className="relative">
+      <CourtTile courtNumber={courtNumber} board={board} isAfterSunset={isAfterSunset} />
+      {/* Overlay intercepts click so the inner Link never fires */}
+      <button
+        className="absolute inset-0 rounded-court"
+        aria-label={`Select board ${board.label}`}
+        onClick={() => onBoardSelect(board.id)}
+      />
+    </div>
+  );
+}
+
+export function CourtMap({ boards, isAfterSunset, onBoardSelect }: CourtMapProps) {
+  const Tile = onBoardSelect
+    ? ({ courtNumber, boardIndex }: { courtNumber: number; boardIndex: number }) => (
+        <PickerTile
+          courtNumber={courtNumber}
+          board={boards[boardIndex]}
+          isAfterSunset={isAfterSunset}
+          onBoardSelect={onBoardSelect}
+        />
+      )
+    : ({ courtNumber, boardIndex }: { courtNumber: number; boardIndex: number }) => (
+        <CourtTile
+          courtNumber={courtNumber}
+          board={boards[boardIndex]}
+          isAfterSunset={isAfterSunset}
+        />
+      );
+
   return (
     <div className="flex gap-3 items-stretch">
       {/* West cluster: 2 columns × 2 rows */}
       <div className="grid grid-cols-2 grid-rows-2 gap-2 flex-1">
         {WEST_LAYOUT.map(({ courtNumber, boardIndex }) => (
-          <CourtTile
-            key={courtNumber}
-            courtNumber={courtNumber}
-            board={boards[boardIndex]}
-            isAfterSunset={isAfterSunset}
-          />
+          <Tile key={courtNumber} courtNumber={courtNumber} boardIndex={boardIndex} />
         ))}
       </div>
 
@@ -50,12 +87,7 @@ export function CourtMap({ boards, isAfterSunset }: CourtMapProps) {
       {/* East cluster: 2 columns × 2 rows */}
       <div className="grid grid-cols-2 grid-rows-2 gap-2 flex-1">
         {EAST_LAYOUT.map(({ courtNumber, boardIndex }) => (
-          <CourtTile
-            key={courtNumber}
-            courtNumber={courtNumber}
-            board={boards[boardIndex]}
-            isAfterSunset={isAfterSunset}
-          />
+          <Tile key={courtNumber} courtNumber={courtNumber} boardIndex={boardIndex} />
         ))}
       </div>
     </div>
