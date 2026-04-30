@@ -1,6 +1,7 @@
 import { Inter, Playfair_Display } from 'next/font/google';
 import type { Metadata } from 'next';
 import { Providers } from '@/components/Providers';
+import { Toaster } from 'sonner';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
@@ -20,6 +21,7 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
       <body className="min-h-screen bg-brand-bg font-sans text-brand-text">
         <Providers>{children}</Providers>
+        <Toaster position="bottom-center" />
       </body>
     </html>
   );
