@@ -10,7 +10,7 @@ import type {
 
 const STALE_THRESHOLD_MS = 2 * 60 * 60 * 1000; // 2 hours
 const RECENT_WINDOW_MS = 30 * 60 * 1000;        // 30 min — stale detection threshold
-const FRESH_WINDOW_MS = 5 * 60 * 1000;          // 5 min — primary display window
+const FRESH_WINDOW_MS = 1 * 60 * 1000;          // 1 min — primary display window
 const CONFIRMATION_TOLERANCE = 1;                // ±1 of displayed count
 
 function computeWait(queueCount: number, courtsOnBoard: number) {
@@ -118,24 +118,29 @@ export async function GET() {
     );
     const isStale = recentReports.length === 0;
 
-    // Displayed count: prefer fresh (5 min) reports; fall back to recent (30 min) or
-    // most-recent-only when stale. This prevents old reports from dragging the median
-    // after a user submits a significantly different count.
-    const displaySource = freshReports.length > 0
-      ? freshReports
-      : isStale
-        ? [mostRecent]
-        : recentReports;
-    const queueCount = Math.round(median(displaySource.map((r) => r.queue_count)));
-
-    // Condition: mode of same source used for queue count
-    const conditionCounts: Record<string, number> = {};
-    for (const r of displaySource) {
-      conditionCounts[r.court_condition] = (conditionCounts[r.court_condition] ?? 0) + 1;
+    // Displayed count: most recent report within 1 min wins outright.
+    // If nothing that fresh, fall back to median of the last 30 min (multi-user stability).
+    // Stale = nothing in 30 min, show most recent single value.
+    let queueCount: number;
+    let courtCondition: CourtCondition;
+    if (freshReports.length > 0) {
+      // Most recent report in the last 1 min takes priority — no median
+      queueCount = freshReports[0].queue_count;
+      courtCondition = freshReports[0].court_condition as CourtCondition;
+    } else if (isStale) {
+      queueCount = mostRecent.queue_count;
+      courtCondition = mostRecent.court_condition as CourtCondition;
+    } else {
+      // 1–30 min: median across all recent reports for multi-user stability
+      queueCount = Math.round(median(recentReports.map((r) => r.queue_count)));
+      const conditionCounts: Record<string, number> = {};
+      for (const r of recentReports) {
+        conditionCounts[r.court_condition] = (conditionCounts[r.court_condition] ?? 0) + 1;
+      }
+      courtCondition = Object.entries(conditionCounts).sort(
+        (a, b) => b[1] - a[1],
+      )[0][0] as CourtCondition;
     }
-    const courtCondition = Object.entries(conditionCounts).sort(
-      (a, b) => b[1] - a[1],
-    )[0][0] as CourtCondition;
 
     // Confirmation count: fresh (or recent if no fresh) reports within ±1 of displayed count
     const confirmationSource = freshReports.length > 0 ? freshReports : recentReports;
