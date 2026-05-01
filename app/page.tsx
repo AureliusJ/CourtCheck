@@ -7,8 +7,12 @@ import { CourtMap } from '@/components/CourtMap';
 import { SunStatusStrip } from '@/components/SunStatusStrip';
 import { BoardCard } from '@/components/BoardCard';
 import { StickyUpdateCTA } from '@/components/StickyUpdateCTA';
+import { getSunWindow } from '@/lib/sun';
 import type { SunWindow } from '@/lib/sun';
 import { useState } from 'react';
+
+const LAT = 43.6772;
+const LON = -79.3919;
 
 function BoardLegendRow({
   label,
@@ -54,7 +58,10 @@ function BoardLegendRow({
 
 export default function HomePage() {
   const { data, isLoading, isError } = useCurrentPark();
-  const [hueState, setHueState] = useState<SunWindow['hueState']>('day');
+  const [hueState, setHueState] = useState<SunWindow['hueState']>(() => {
+    if (typeof window === 'undefined') return 'day';
+    return getSunWindow(LAT, LON).hueState;
+  });
 
   // Apply sun-state to body for CSS gradient transitions
   useEffect(() => {

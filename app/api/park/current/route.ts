@@ -13,6 +13,27 @@ const RECENT_WINDOW_MS = 30 * 60 * 1000;        // 30 min — stale detection th
 const FRESH_WINDOW_MS = 1 * 60 * 1000;          // 1 min — primary display window
 const CONFIRMATION_TOLERANCE = 1;                // ±1 of displayed count
 
+function torontoMidnightUTC(): Date {
+  const now = new Date();
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Toronto',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false,
+  });
+  const parts: Record<string, number> = {};
+  for (const p of fmt.formatToParts(now)) {
+    if (p.type !== 'literal') parts[p.type] = parseInt(p.value, 10);
+  }
+  // Express Toronto's current time as a UTC epoch value (shift trick)
+  const torontoAsUTC = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second);
+  // offsetMs = how far Toronto is behind UTC (positive = behind)
+  const offsetMs = now.getTime() - torontoAsUTC;
+  // Midnight of today in Toronto, expressed back in real UTC
+  const midnightAsUTC = Date.UTC(parts.year, parts.month - 1, parts.day, 0, 0, 0);
+  return new Date(midnightAsUTC + offsetMs);
+}
+
 function computeWait(queueCount: number, courtsOnBoard: number) {
   if (queueCount === 0) {
     return { waitMinutes: 0, waitDisplayLow: 0, waitDisplayHigh: 0 };
@@ -65,14 +86,15 @@ export async function GET() {
     );
   }
 
-  // Fetch all reports from the last 2 hours for the whole park (covers both
-  // the recent 30-min window and the staleness check in one query)
-  const twoHoursAgo = new Date(Date.now() - STALE_THRESHOLD_MS).toISOString();
+  // Fetch reports: use the later of (2 hours ago) or (Toronto midnight today).
+  // The midnight floor ensures yesterday's data never bleeds past midnight.
+  const twoHoursAgo = new Date(Date.now() - STALE_THRESHOLD_MS);
+  const cutoff = new Date(Math.max(twoHoursAgo.getTime(), torontoMidnightUTC().getTime()));
   const { data: reports } = await db
     .from('reports')
     .select('board_id, queue_count, court_condition, photo_url, photo_status, created_at')
     .eq('park_id', 'ramsden')
-    .gte('created_at', twoHoursAgo)
+    .gte('created_at', cutoff.toISOString())
     .order('created_at', { ascending: false });
 
   const recentCutoff = new Date(Date.now() - RECENT_WINDOW_MS);
