@@ -13,6 +13,9 @@ const VALID_CONDITIONS = new Set<CourtCondition>(['dry', 'wet', 'unknown']);
 const QUEUE_MIN = 0;
 const QUEUE_MAX = 15;
 
+// Prefix that all legitimate Supabase Storage photo URLs must start with
+const STORAGE_URL_PREFIX = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/court-photos/`;
+
 export async function POST(request: NextRequest) {
   // ── 1. Parse and validate body ──────────────────────────────────────────
   let body: unknown;
@@ -25,7 +28,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { boardId, queueCount, courtCondition, afterSunsetConfirmed } =
+  const { boardId, queueCount, courtCondition, afterSunsetConfirmed, photoUrl } =
     body as Record<string, unknown>;
 
   if (typeof boardId !== 'string' || !VALID_BOARD_IDS.has(boardId)) {
@@ -51,6 +54,12 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   }
+
+  // Validate optional photoUrl — must originate from our Supabase Storage bucket
+  const validatedPhotoUrl =
+    typeof photoUrl === 'string' && photoUrl.startsWith(STORAGE_URL_PREFIX)
+      ? photoUrl
+      : null;
 
   // ── 2. Extract device token (generate random fallback if missing) ────────
   const rawDevice =
@@ -109,9 +118,12 @@ export async function POST(request: NextRequest) {
       board_id: boardId,
       queue_count: queueCount,
       court_condition: courtCondition,
-      photo_url: null,
-      photo_status: 'none',
-      photo_expires_at: null,
+      photo_url: validatedPhotoUrl,
+      photo_status: validatedPhotoUrl ? 'approved' : 'none',
+      // Always recompute server-side — never trust client-supplied expiry
+      photo_expires_at: validatedPhotoUrl
+        ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+        : null,
       device_hash: hashedDevice,
       ip_hash: hashedIp,
     })
@@ -128,7 +140,7 @@ export async function POST(request: NextRequest) {
 
   // ── 9. Return 201 ──────────────────────────────────────────────────────────
   return Response.json(
-    { reportId: report.id, photoStatus: 'none' },
+    { reportId: report.id, photoStatus: validatedPhotoUrl ? 'approved' : 'none' },
     { status: 201 },
   );
 }
