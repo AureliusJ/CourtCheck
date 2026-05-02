@@ -4,14 +4,13 @@ import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import SunCalc from 'suncalc';
-import { toast } from 'sonner';
-import { Camera } from 'lucide-react';
 import { useCurrentPark } from '@/hooks/useCurrentPark';
 import { useSubmitReport } from '@/hooks/useSubmitReport';
 import { BoardPicker } from '@/components/BoardPicker';
 import { QueueStepper } from '@/components/QueueStepper';
 import { ConditionToggle } from '@/components/ConditionToggle';
 import { AfterSunsetModal } from '@/components/AfterSunsetModal';
+import { PhotoUploadTile } from '@/components/PhotoUploadTile';
 import type { CourtCondition } from '@/lib/api/types';
 
 const LAT = 43.6772;
@@ -59,6 +58,7 @@ function UpdateForm({ boardId, onBack, backIsHome }: UpdateFormProps) {
   const synced = useRef(false);
   const [queueCount, setQueueCount] = useState(0);
   const [courtCondition, setCourtCondition] = useState<CourtCondition>('unknown');
+  const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
   // Sync defaults from live data once it arrives
@@ -90,7 +90,8 @@ function UpdateForm({ boardId, onBack, backIsHome }: UpdateFormProps) {
 
   const handleSubmit = (afterSunsetConfirmed?: boolean) => {
     mutate(
-      { boardId, queueCount, courtCondition, afterSunsetConfirmed },
+      { boardId, queueCount, courtCondition, afterSunsetConfirmed,
+        ...(uploadedPhotoUrl ? { photoUrl: uploadedPhotoUrl } : {}) },
       { onSuccess: () => setShowSuccess(true) },
     );
   };
@@ -130,14 +131,8 @@ function UpdateForm({ boardId, onBack, backIsHome }: UpdateFormProps) {
         {/* Condition toggle */}
         <ConditionToggle value={courtCondition} onChange={setCourtCondition} />
 
-        {/* Photo placeholder */}
-        <button
-          onClick={() => toast('Photo upload coming soon')}
-          className="w-full rounded-card border-2 border-dashed border-brand-gray/40 flex flex-col items-center justify-center gap-2 py-8 text-brand-gray"
-        >
-          <Camera size={24} />
-          <span className="text-sm">Add a photo (optional)</span>
-        </button>
+        {/* Photo upload */}
+        <PhotoUploadTile boardId={boardId} onPhotoReady={setUploadedPhotoUrl} />
 
         {/* Submit */}
         <div className="flex flex-col gap-2">

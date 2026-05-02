@@ -10,6 +10,7 @@ interface SubmitReportInput {
   queueCount: number;
   courtCondition: 'dry' | 'wet' | 'unknown';
   afterSunsetConfirmed?: boolean;
+  photoUrl?: string;
 }
 
 interface SubmitReportResult {
