@@ -115,12 +115,26 @@ export function BoardCard({ board, isAfterSunset, weatherHint }: BoardCardProps)
             )}
         </div>
 
-        <Link
-          href={`/update?board=${board.id}`}
-          className={`${bgDark} text-brand-cream text-[13px] font-sans font-medium px-4 py-2 rounded-full shrink-0 hover:opacity-90 active:opacity-75 transition-opacity`}
-        >
-          Update +
-        </Link>
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Photo thumbnail — subtle, supporting evidence only */}
+          {board.current.photoUrl && (
+            <img
+              src={board.current.photoUrl}
+              alt="Photo taken recently"
+              width={56}
+              height={56}
+              className="rounded-court object-cover"
+              style={{ width: 56, height: 56 }}
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+            />
+          )}
+          <Link
+            href={`/update?board=${board.id}`}
+            className={`${bgDark} text-brand-cream text-[13px] font-sans font-medium px-4 py-2 rounded-full hover:opacity-90 active:opacity-75 transition-opacity`}
+          >
+            Update +
+          </Link>
+        </div>
       </div>
     </div>
   );
