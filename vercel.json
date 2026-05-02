@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/expire-photos",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/aggregate-busy-times",
+      "schedule": "0 7 * * *"
+    }
+  ]
+}
