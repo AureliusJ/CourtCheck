@@ -112,10 +112,10 @@ function UpdateForm({ boardId, onBack, backIsHome }: UpdateFormProps) {
         {/* Header */}
         <div>
           <p className="text-xs uppercase tracking-widest text-brand-gray font-medium mb-1">
-            {config.label}
+            Ramsden Park
           </p>
           <h1 className="font-serif text-2xl text-brand-text">
-            Updating Court {config.firstCourt}
+            Update {config.label}
           </h1>
         </div>
 
